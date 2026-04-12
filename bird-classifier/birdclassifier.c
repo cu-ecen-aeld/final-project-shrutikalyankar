@@ -53,7 +53,7 @@ static int __init bird_init(void) {
     major = register_chrdev(0, DEVICE_NAME, &fops);
     if (major < 0) return major;
 
-    bird_class = class_create(CLASS_NAME);
+    bird_class = class_create(THIS_MODULE, CLASS_NAME);
     bird_device = device_create(bird_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
 
     // Request GPIO pin - using 'gpiod_get_from_dt' is standard, 
