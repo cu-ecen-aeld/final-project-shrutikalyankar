@@ -1,0 +1,1 @@
+savedcmd_/home/atharv_aesd/AESD/final-project-shrutikalyankar/bird-classifier/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/atharv_aesd/AESD/final-project-shrutikalyankar/bird-classifier/Module.symvers -T /home/atharv_aesd/AESD/final-project-shrutikalyankar/bird-classifier/modules.order -i Module.symvers -e 
