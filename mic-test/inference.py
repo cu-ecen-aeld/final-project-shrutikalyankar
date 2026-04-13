@@ -25,11 +25,12 @@ def run_inference(audio_window):
     tmp_path = tempfile.mktemp(suffix=".wav")
 
     try:
+        audio_48k = np.repeat(audio_window, 3)
         with wave.open(tmp_path, 'wb') as wf:
             wf.setnchannels(1)
             wf.setsampwidth(2)
-            wf.setframerate(TARGET_RATE)
-            wf.writeframes(audio_window.astype(np.int16).tobytes())
+            wf.setframerate(48000)
+            wf.writeframes(audio_48k.astype(np.int16).tobytes())
 
         print(f"[DEBUG] max_amplitude={np.max(np.abs(audio_window))}, samples={len(audio_window)}")
 

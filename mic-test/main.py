@@ -10,7 +10,7 @@ from inference import get_top_detection
 DRIVER_PATH = "/dev/birdclassifier"
 CONFIDENCE_THRESHOLD = 0.70
 INFERENCE_COOLDOWN = 3.0
-USE_DRIVER = False  # Set True when kernel module is loaded
+USE_DRIVER = True  # Set True when kernel module is loaded
 
 # --- Globals ---
 _running = True
