@@ -1,49 +1,52 @@
 import numpy as np
 import tempfile
-import soundfile as sf
 import os
-from datetime import date
+import wave
 from birdnetlib import Recording
 from birdnetlib.analyzer import Analyzer
 
 # --- Config ---
 TARGET_RATE = 16000
-MIN_CONFIDENCE = 0.70       # only report detections above this
-LOCATION_LAT = 40.0         # change to your actual location
-LOCATION_LON = -105.0       # change to your actual location
-RECORD_DATE = date.today()  # uses today's date for species filtering
+MIN_CONFIDENCE = 0.25
+LOCATION_LAT = 40.0
+LOCATION_LON = -105.0
 
-# Load model once at startup — expensive operation, do NOT reload per window
 print("Loading BirdNET model...")
 _analyzer = Analyzer()
 print("Model ready.")
 
 
 def run_inference(audio_window):
-    """
-    Takes a 1-second int16 numpy array at 16kHz.
-    Returns a list of (species_name, confidence) tuples above MIN_CONFIDENCE,
-    or an empty list if nothing detected.
-    """
-    # BirdNET needs at least 3 seconds of audio — pad the 1s window to 3s
-    padded = np.tile(audio_window, 3)  # repeat 3x → 48000 samples = 3s
+    min_samples = TARGET_RATE * 3
+    if len(audio_window) < min_samples:
+        repeats = int(np.ceil(min_samples / len(audio_window)))
+        audio_window = np.tile(audio_window, repeats)[:min_samples]
 
-    # Write to a temp wav file — birdnetlib works on files, not raw arrays
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp_path = tmp.name
+    tmp_path = tempfile.mktemp(suffix=".wav")
 
     try:
-        sf.write(tmp_path, padded.astype(np.float32) / 32767.0, TARGET_RATE)
+        with wave.open(tmp_path, 'wb') as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(TARGET_RATE)
+            wf.writeframes(audio_window.astype(np.int16).tobytes())
+
+        print(f"[DEBUG] max_amplitude={np.max(np.abs(audio_window))}, samples={len(audio_window)}")
 
         recording = Recording(
             _analyzer,
             tmp_path,
             lat=LOCATION_LAT,
             lon=LOCATION_LON,
-            date=RECORD_DATE,
             min_conf=MIN_CONFIDENCE,
         )
         recording.analyze()
+
+        # DEBUG
+        print(f"[DEBUG] detections={len(recording.detections)}")
+        for d in recording.detections:
+            print(f"[DEBUG] {d['common_name']}: {d['confidence']:.2f}")
+
 
         results = [
             (d["common_name"], d["scientific_name"], d["confidence"])
@@ -52,23 +55,13 @@ def run_inference(audio_window):
         return results
 
     finally:
-        os.unlink(tmp_path)  # always clean up temp file
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 
 def get_top_detection(audio_window):
-    """
-    Returns the single highest-confidence detection as a string
-    formatted for writing to /dev/birdclassifier.
-    Returns None if nothing detected above threshold.
-    Format: "common_name:confidence"  e.g. "Common Raven:0.98"
-    """
     results = run_inference(audio_window)
-
     if not results:
         return None
-
-    # Sort by confidence, take the top result
     top = sorted(results, key=lambda x: x[2], reverse=True)[0]
-    common_name, scientific_name, confidence = top
-
-    return f"{common_name}:{confidence:.2f}"
+    return f"{top[0]}:{top[2]:.2f}"
