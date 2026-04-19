@@ -11,21 +11,16 @@ WINDOW_SIZE = TARGET_RATE # 1 second of audio at 16kHz = 16000 samples
 HOP_SIZE = WINDOW_SIZE // 2  # 50% overlap = 0.5s hop
 
 # Thread-safe queue — capture thread puts windows, inference thread gets them
-audio_queue = queue.Queue()
+audio_queue = queue.Queue(maxsize=3)
 
 # Internal buffer to accumulate samples before windowing
 _buffer = np.array([], dtype=np.int16)
 _buffer_lock = threading.Lock()
 
 def _audio_callback(indata, frames, time, status):
-    """
-    Called by sounddevice on every chunk of audio captured.
-    Runs in a separate thread automatically.
-    """
     if status:
         print("Audio status:", status)
 
-    # Mix to mono if stereo, then downsample 48k -> 16k
     mono = indata[:, 0] if indata.ndim > 1 else indata[:, 0]
     mono_int16 = (mono * 32767).astype(np.int16)
     downsampled = mono_int16[::DOWNSAMPLE_FACTOR]
@@ -34,11 +29,16 @@ def _audio_callback(indata, frames, time, status):
     with _buffer_lock:
         _buffer = np.concatenate([_buffer, downsampled])
 
-        # Slice out complete 1-second windows with 50% overlap
         while len(_buffer) >= WINDOW_SIZE:
             window = _buffer[:WINDOW_SIZE].copy()
-            audio_queue.put(window)
-            _buffer = _buffer[HOP_SIZE:]  # advance by hop, not full window
+            # Drop oldest if queue is full instead of blocking
+            if audio_queue.full():
+                try:
+                    audio_queue.get_nowait()  # discard oldest
+                except queue.Empty:
+                    pass
+            audio_queue.put_nowait(window)
+            _buffer = _buffer[HOP_SIZE:]
 
 
 def start_capture():
