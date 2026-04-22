@@ -1,5 +1,5 @@
-import sounddevice as sd
-import numpy as np
+import sounddevice as sd   #library to interface with ALSA
+import numpy as np          
 import queue
 import threading
 
@@ -13,23 +13,24 @@ HOP_SIZE = WINDOW_SIZE // 2  # 50% overlap = 0.5s hop
 # Thread-safe queue — capture thread puts windows, inference thread gets them
 audio_queue = queue.Queue(maxsize=3)
 
-# Internal buffer to accumulate samples before windowing
-_buffer = np.array([], dtype=np.int16)
-_buffer_lock = threading.Lock()
+# Internal buffer to accumulate incoming audio samples before windowing
+_buffer = np.array([], dtype=np.int16)     
+_buffer_lock = threading.Lock()  #so any other thread trying to access _buffer will wait till block finishes
 
+#automatically called by sounddevice, whenever there's an input from mic
 def _audio_callback(indata, frames, time, status):
     if status:
         print("Audio status:", status)
 
-    mono = indata[:, 0] if indata.ndim > 1 else indata[:, 0]
-    mono_int16 = (mono * 32767).astype(np.int16)
-    downsampled = mono_int16[::DOWNSAMPLE_FACTOR]
+    mono = indata[:, 0] if indata.ndim > 1 else indata[:, 0]  #extract 2D channel
+    mono_int16 = (mono * 32767).astype(np.int16)              #extract first channel if sounddevice returns 2D array  
+    downsampled = mono_int16[::DOWNSAMPLE_FACTOR]             #keep every 3rd sample. to get 16kHz  
 
     global _buffer
     with _buffer_lock:
-        _buffer = np.concatenate([_buffer, downsampled])
+        _buffer = np.concatenate([_buffer, downsampled]) 
 
-        while len(_buffer) >= WINDOW_SIZE:
+        while len(_buffer) >= WINDOW_SIZE:         #if >16000 samples
             window = _buffer[:WINDOW_SIZE].copy()
             # Drop oldest if queue is full instead of blocking
             if audio_queue.full():
