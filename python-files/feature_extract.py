@@ -1,5 +1,8 @@
 import numpy as np
 
+#initially written to feed melspectrograms directly into TFLite. 
+#But since we used birdnetlib, it handles its own internal feature extraction
+#Can be used if we switch to a custom model
 # --- Config ---
 TARGET_RATE = 16000
 N_MELS = 64

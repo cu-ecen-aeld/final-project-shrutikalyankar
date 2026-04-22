@@ -6,7 +6,7 @@ from birdnetlib import Recording
 from birdnetlib.analyzer import Analyzer
 
 # --- Config ---
-TARGET_RATE = 16000
+TARGET_RATE = 16000   
 MIN_CONFIDENCE = 0.25
 LOCATION_LAT = 40.0
 LOCATION_LON = -105.0
@@ -15,15 +15,16 @@ print("Loading BirdNET model...")
 _analyzer = Analyzer()
 print("Model ready.")
 
-
+#takes a 1 second audio window(16k samples) from the audio queue
 def run_inference(audio_window):
-    min_samples = TARGET_RATE * 3
+    min_samples = TARGET_RATE * 3           #BirdNet needs 3sec audio min
     if len(audio_window) < min_samples:
         repeats = int(np.ceil(min_samples / len(audio_window)))
-        audio_window = np.tile(audio_window, repeats)[:min_samples]
-
+        audio_window = np.tile(audio_window, repeats)[:min_samples]  #np.tile repeats the array. 
+                                            #so 1 sec call gets repeated thrice
     tmp_path = tempfile.mktemp(suffix=".wav")
 
+    #upsample from 16kHz to 48kHz by repeating samples 3 times
     try:
         audio_48k = np.repeat(audio_window, 3)
         with wave.open(tmp_path, 'wb') as wf:
@@ -33,7 +34,7 @@ def run_inference(audio_window):
             wf.writeframes(audio_48k.astype(np.int16).tobytes())
 
         print(f"[DEBUG] max_amplitude={np.max(np.abs(audio_window))}, samples={len(audio_window)}")
-
+        #sets location so sets up inference coordinates
         recording = Recording(
             _analyzer,
             tmp_path,
@@ -41,7 +42,10 @@ def run_inference(audio_window):
             lon=LOCATION_LON,
             min_conf=MIN_CONFIDENCE,
         )
-        recording.analyze()
+        recording.analyze()  #now run the birdNet inference. 
+        #TFLite model runs acceleration pack here. 
+        #internally, birdnetlib reads the file, splits it into 3 sec chunks, extracts spectrograms
+        #and runs them through the neural network
 
         # DEBUG
         print(f"[DEBUG] detections={len(recording.detections)}")
@@ -55,7 +59,7 @@ def run_inference(audio_window):
         ]
         return results
 
-    finally:
+    finally:  #delete temp wav files
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
