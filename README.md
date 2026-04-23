@@ -5,7 +5,7 @@ Create an embedded system that identifies specific bird calls in real-time and t
 ### Motivation
 To demonstrate low-latency audio processing on an optimized, custom Linux distribution using Buildroot, combining kernel-space driver development with user-space ML inference on a resource-constrained ARM platform.
 
-### Video
+### Final Video
 [Watch Video](https://drive.google.com/file/d/1HdYt9Z5GcIJgI08m132sGkWdAlbMQzLx/view?usp=drive_link)
 
 ### Project Description
