@@ -7,6 +7,7 @@ To demonstrate low-latency audio processing on an optimized, custom Linux distri
 
 ### Final Videos
 [Watch Shruti's Video](https://drive.google.com/file/d/1HdYt9Z5GcIJgI08m132sGkWdAlbMQzLx/view?usp=drive_link)
+
 [Watch Atharv's Video](https://drive.google.com/file/d/1GPHnHT2XEuXlE-AN1friiBOBo7CzuzT1/view?usp=sharing)  
 
 ### Project Description
