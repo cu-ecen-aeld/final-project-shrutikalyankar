@@ -5,8 +5,9 @@ Create an embedded system that identifies specific bird calls in real-time and t
 ### Motivation
 To demonstrate low-latency audio processing on an optimized, custom Linux distribution using Buildroot, combining kernel-space driver development with user-space ML inference on a resource-constrained ARM platform.
 
-### Final Video
-[Watch Video](https://drive.google.com/file/d/1HdYt9Z5GcIJgI08m132sGkWdAlbMQzLx/view?usp=drive_link)
+### Final Videos
+[Watch Shruti's Video](https://drive.google.com/file/d/1HdYt9Z5GcIJgI08m132sGkWdAlbMQzLx/view?usp=drive_link)
+[Watch Atharv's Video](https://drive.google.com/file/d/1GPHnHT2XEuXlE-AN1friiBOBo7CzuzT1/view?usp=sharing)  
 
 ### Project Description
 A custom-built Linux distribution (Buildroot) that listens for bird calls using ALSA, extracts mel-spectrogram features, runs inference via a TFLite model (BirdNET), and triggers species-specific hardware alerts via a custom kernel character driver (/dev/birdclassifier).
