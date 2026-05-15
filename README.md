@@ -91,7 +91,7 @@ Both members share responsibility for end-to-end integration, latency tuning, an
 
 **Contact**:  
 Atharv More – *atharv.more@colorado.edu*  
-Shruti kalyankar – *Shruti.Kalyankar@colorado.edu*
+Shruti Kalyankar – *Shruti.Kalyankar@colorado.edu*
 
 # Schedule Page
 https://github.com/users/shrutikalyankar/projects/1/views/1
